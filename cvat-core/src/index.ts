@@ -109,6 +109,7 @@ export default interface CVATCore {
     jobs: {
         get: (filter: {
             page?: number;
+            pageSize?: number;
             filter?: string;
             sort?: string;
             search?: string;

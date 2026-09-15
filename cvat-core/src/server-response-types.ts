@@ -41,7 +41,10 @@ export interface SerializedUser {
     date_joined?: string;
     email_verification_required: boolean;
     has_analytics_access: boolean;
+    workforce_role?: WorkforceRoleValue;
 }
+
+export type WorkforceRoleValue = 'admin' | 'tasker' | 'reviewer';
 
 export interface SerializedUserGrowthData {
     id: number;

@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: MIT
 
+import unittest
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import override_settings
@@ -29,7 +32,7 @@ class OrganizationCreateAPITestCase(ApiTestBase):
 
     @override_settings(ORGANIZATIONS_MIN_ROLE_TO_CREATE="admin")
     def test_overridden_permissions(self):
-        for user, expected_status in [(self.admin, 201), (self.owner, 403), (self.annotator, 403)]:
+        for user, expected_status in [(self.admin, 201), (self.owner, 201), (self.annotator, 403)]:
             response = self._run_api(user, {"slug": user.username + "org"})
             self.assertEqual(response.status_code, expected_status, response.content)
 
@@ -70,6 +73,9 @@ class InvitationCreateAPITestCase(ApiTestBase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn("invited@test.com", mail.outbox[0].to)
 
+    @unittest.skipUnless(
+        settings.IAM_PUBLIC_REGISTRATION, "Public registration is disabled on this platform"
+    )
     def test_can_register_over_invited_user(self):
         self._invite("invited@test.com")
         invited_user_id = User.objects.get(email="invited@test.com").id

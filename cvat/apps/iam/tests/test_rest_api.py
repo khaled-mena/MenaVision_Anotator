@@ -3,11 +3,13 @@
 #
 # SPDX-License-Identifier: MIT
 import base64
+import unittest
 
 from allauth.account.forms import default_token_generator
 from allauth.account.models import EmailAddress
 from allauth.account.utils import user_pk_to_url_str
 from allauth.account.views import EmailVerificationSentView
+from django.conf import settings
 from django.test import override_settings
 from django.urls import path, re_path, reverse
 from rest_framework import status
@@ -45,6 +47,9 @@ class AcceptingEmailValidator(IEmailValidator):
         pass
 
 
+@unittest.skipUnless(
+    settings.IAM_PUBLIC_REGISTRATION, "Public registration is disabled on this platform"
+)
 class UserRegisterAPITestCase(ApiTestBase):
     user_data = {
         "first_name": "test_first",

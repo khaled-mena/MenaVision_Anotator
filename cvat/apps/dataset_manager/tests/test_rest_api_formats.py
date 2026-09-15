@@ -169,6 +169,14 @@ class _DbTestBase(ExportApiTestBase, ImportApiTestBase):
         cls.admin = user_admin
         cls.user = user_dummy
 
+        # The internal platform reserves task ownership for administrators (see
+        # _assign_workforce_roles in cvat.apps.engine.tests.test_rest_api).
+        from cvat.apps.workforce.role_sync import RoleSync
+        from cvat.apps.workforce.roles import WorkforceRole
+
+        RoleSync.apply(user_admin, WorkforceRole.ADMIN)
+        RoleSync.apply(user_dummy, WorkforceRole.ADMIN)
+
     def _put_api_v2_task_id_annotations(self, tid, data):
         with ForceLogin(self.admin, self.client):
             response = self.client.put(f"/api/tasks/{tid}/annotations", data=data, format="json")

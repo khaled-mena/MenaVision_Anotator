@@ -4,10 +4,8 @@
 // SPDX-License-Identifier: MIT
 
 import React from 'react';
-import { Redirect, Route, Switch } from 'react-router';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { Col, Row } from 'antd/lib/grid';
-import Layout from 'antd/lib/layout';
 import Modal from 'antd/lib/modal';
 import notification from 'antd/lib/notification';
 import Spin from 'antd/lib/spin';
@@ -15,56 +13,19 @@ import { DisconnectOutlined } from '@ant-design/icons';
 import Space from 'antd/lib/space';
 import Text from 'antd/lib/typography/Text';
 
-import LogoutComponent from 'components/logout-component';
-import LoginPageContainer from 'containers/login-page/login-page';
-import RegisterPageContainer from 'containers/register-page/register-page';
-import ResetPasswordPageConfirmComponent from 'components/reset-password-confirm-page/reset-password-confirm-page';
-import ResetPasswordPageComponent from 'components/reset-password-page/reset-password-page';
-
-import Header from 'components/header/header';
-import GlobalErrorBoundary from 'components/global-error-boundary/global-error-boundary';
-
-import ShortcutsDialog from 'components/shortcuts-dialog/shortcuts-dialog';
 import ExportDatasetModal from 'components/export-dataset/export-dataset-modal';
 import ExportBackupModal from 'components/export-backup/export-backup-modal';
 import ImportDatasetModal from 'components/import-dataset/import-dataset-modal';
 import ImportBackupModal from 'components/import-backup/import-backup-modal';
 import UploadFileStatusModal from 'components/common/upload-file-status-modal';
 import SelectCSUpdatingSchemeModal from 'components/update-linked-cs-modal/select-cs-updating-scheme-modal';
+import AuthenticatedShell from 'components/application-shell/authenticated-shell';
+import UnauthenticatedShell from 'components/application-shell/unauthenticated-shell';
+import { presentErrors, presentMessages } from 'components/application-shell/notification-presenter';
 
-import JobsPageComponent from 'components/jobs-page/jobs-page';
-import ModelsPageComponent from 'components/models-page/models-page';
-
-import TasksPageContainer from 'containers/tasks-page/tasks-page';
-import CreateTaskPageContainer from 'containers/create-task-page/create-task-page';
-import TaskPageComponent from 'components/task-page/task-page';
-
-import ProjectsPageComponent from 'components/projects-page/projects-page';
-import CreateProjectPageComponent from 'components/create-project-page/create-project-page';
-import ProjectPageComponent from 'components/project-page/project-page';
-
-import CloudStoragesPageComponent from 'components/cloud-storages-page/cloud-storages-page';
-import CreateCloudStoragePageComponent from 'components/create-cloud-storage-page/create-cloud-storage-page';
-import UpdateCloudStoragePageComponent from 'components/update-cloud-storage-page/update-cloud-storage-page';
-
-import OrganizationPage from 'components/organization-page/organization-page';
-import CreateOrganizationComponent from 'components/create-organization-page/create-organization-page';
-import { ShortcutsContextProvider } from 'components/shortcuts.context';
-
-import WebhooksPage from 'components/webhooks-page/webhooks-page';
-import CreateWebhookPage from 'components/setup-webhook-pages/create-webhook-page';
-import UpdateWebhookPage from 'components/setup-webhook-pages/update-webhook-page';
-
-import AnnotationGuidePage from 'components/md-guide/annotation-guide-page';
-
-import InvitationsPage from 'components/invitations-page/invitations-page';
-
-import RequestsPage from 'components/requests-page/requests-page';
-
-import AnnotationPageContainer from 'containers/annotation-page/annotation-page';
 import { Organization, getCore, UserGrowthDataModifiableFields } from 'cvat-core-wrapper';
 import {
-    ErrorState, GrowthState, NotificationState, NotificationsState, PluginsState,
+    GrowthState, NotificationsState, PluginsState,
 } from 'reducers';
 import showPlatformNotification, {
     platformInfo,
@@ -75,18 +36,9 @@ import '../styles.scss';
 import appConfig from 'config';
 import EventRecorder from 'utils/event-recorder';
 import { authQuery } from 'utils/auth-query';
-import CVATMarkdown from './common/cvat-markdown';
-import EmailConfirmationPage from './email-confirmation-pages/email-confirmed';
-import EmailVerificationSentPage from './email-confirmation-pages/email-verification-sent';
-import IncorrectEmailConfirmationPage from './email-confirmation-pages/incorrect-email-confirmation';
-import CreateJobPage from './create-job-page/create-job-page';
-import QualityControlPage from './quality-control/quality-control-page';
-import AnalyticsReportPage from './analytics-report/analytics-report-page';
-import ConsensusManagementPage from './consensus-management-page/consensus-management-page';
 import InvitationWatcher from './invitation-watcher/invitation-watcher';
 import SelectOrganizationModal from './select-organization-modal/select-organization-modal';
 import BulkProgress from './bulk-progress';
-import ProfilePageComponent from './profile-page/profile-page';
 import ServerUnavailableComponent from './server-unavailable/server-unavailable';
 import GitHubStarModal from './github-star-prompt/github-star-modal';
 
@@ -409,79 +361,14 @@ class CVATApplication extends React.PureComponent<CVATAppProps & RouteComponentP
 
     private showMessages(): void {
         const { notifications, resetMessages, history } = this.props;
-        function showMessage(notificationState: NotificationState): void {
-            notification.info({
-                message: (
-                    <CVATMarkdown history={history}>{notificationState.message}</CVATMarkdown>
-                ),
-                description: notificationState?.description && (
-                    <CVATMarkdown history={history}>{notificationState?.description}</CVATMarkdown>
-                ),
-                duration: notificationState.duration ?? null,
-                className: notificationState.className,
-            });
-        }
-
-        let shown = false;
-        for (const where of Object.keys(notifications.messages)) {
-            for (const what of Object.keys((notifications as any).messages[where])) {
-                const notificationState = (notifications as any).messages[where][what] as NotificationState;
-                shown = shown || !!notificationState;
-                if (notificationState) {
-                    showMessage(notificationState);
-                }
-            }
-        }
-
-        if (shown) {
+        if (presentMessages(history, notifications)) {
             resetMessages();
         }
     }
 
     private showErrors(): void {
         const { notifications, resetErrors, history } = this.props;
-
-        function showError(title: string, _error: Error, shouldLog?: boolean, className?: string): void {
-            const error = _error?.message || _error.toString();
-            const dynamicProps = typeof className === 'undefined' ? {} : { className };
-
-            let errorLength = error.length;
-            // Do not count the length of the link in the Markdown error message
-            if (/]\(.+\)/.test(error)) {
-                errorLength = error.replace(/]\(.+\)/, ']').length;
-            }
-
-            notification.error({
-                ...dynamicProps,
-                message: (
-                    <CVATMarkdown history={history}>{title}</CVATMarkdown>
-                ),
-                duration: null,
-                description: errorLength > appConfig.MAXIMUM_NOTIFICATION_MESSAGE_LENGTH ?
-                    'Open the Browser Console to get details' : <CVATMarkdown history={history}>{error}</CVATMarkdown>,
-            });
-
-            if (shouldLog) {
-                setTimeout(() => {
-                    // throw the error to be caught by global listener
-                    throw _error;
-                });
-            } else {
-                console.error(error);
-            }
-        }
-
-        let shown = false;
-        for (const where of Object.keys(notifications.errors)) {
-            for (const what of Object.keys((notifications as any).errors[where])) {
-                const error = (notifications as any).errors[where][what] as ErrorState;
-                shown = shown || !!error;
-                if (error && !error.ignore) {
-                    showError(error.message, error.reason, error.shouldLog, error.className);
-                }
-            }
-        }
-        if (shown) {
+        if (presentErrors(history, notifications)) {
             resetErrors();
         }
     }
@@ -548,128 +435,41 @@ class CVATApplication extends React.PureComponent<CVATAppProps & RouteComponentP
         if (readyForRender) {
             if (user && user.isVerified) {
                 return (
-                    <GlobalErrorBoundary>
-                        <ShortcutsContextProvider>
-                            <Layout>
-                                <Header />
-                                <Layout.Content style={{ height: '100%', position: 'relative' }}>
-                                    <ShortcutsDialog />
-                                    <Switch>
-                                        <Route exact path='/auth/logout' component={LogoutComponent} />
-                                        <Route exact path='/projects' component={ProjectsPageComponent} />
-                                        <Route exact path='/projects/create' component={CreateProjectPageComponent} />
-                                        <Route exact path='/projects/:id' component={ProjectPageComponent} />
-                                        <Route exact path='/projects/:id/webhooks' component={WebhooksPage} />
-                                        <Route exact path='/projects/:id/guide' component={AnnotationGuidePage} />
-                                        <Route exact path='/projects/:pid/quality-control' component={QualityControlPage} />
-                                        <Route exact path='/projects/:pid/analytics' component={AnalyticsReportPage} />
-                                        <Route exact path='/tasks' component={TasksPageContainer} />
-                                        <Route exact path='/tasks/create' component={CreateTaskPageContainer} />
-                                        <Route exact path='/tasks/:id' component={TaskPageComponent} />
-                                        <Route exact path='/tasks/:tid/quality-control' component={QualityControlPage} />
-                                        <Route exact path='/tasks/:tid/analytics' component={AnalyticsReportPage} />
-                                        <Route exact path='/tasks/:tid/consensus' component={ConsensusManagementPage} />
-                                        <Route exact path='/tasks/:id/jobs/create' component={CreateJobPage} />
-                                        <Route exact path='/tasks/:id/guide' component={AnnotationGuidePage} />
-                                        <Route exact path='/tasks/:tid/jobs/:jid' component={AnnotationPageContainer} />
-                                        <Route exact path='/tasks/:tid/jobs/:jid/analytics' component={AnalyticsReportPage} />
-                                        <Route exact path='/jobs' component={JobsPageComponent} />
-                                        <Route exact path='/cloudstorages' component={CloudStoragesPageComponent} />
-                                        <Route
-                                            exact
-                                            path='/cloudstorages/create'
-                                            component={CreateCloudStoragePageComponent}
-                                        />
-                                        <Route
-                                            exact
-                                            path='/cloudstorages/update/:id'
-                                            component={UpdateCloudStoragePageComponent}
-                                        />
-                                        <Route
-                                            exact
-                                            path='/organizations/create'
-                                            component={CreateOrganizationComponent}
-                                        />
-                                        <Route exact path='/organization/webhooks' component={WebhooksPage} />
-                                        <Route exact path='/webhooks/create' component={CreateWebhookPage} />
-                                        <Route exact path='/webhooks/update/:id' component={UpdateWebhookPage} />
-                                        <Route exact path='/invitations' component={InvitationsPage} />
-                                        <Route exact path='/organization' component={OrganizationPage} />
-                                        <Route exact path='/requests' component={RequestsPage} />
-                                        <Route exact path='/profile' component={ProfilePageComponent} />
-                                        { routesToRender }
-                                        <Route
-                                            path='/models'
-                                        >
-                                            <Switch>
-                                                <Route exact path='/models' component={ModelsPageComponent} />
-                                            </Switch>
-                                        </Route>
-                                        <Redirect
-                                            push
-                                            to={{
-                                                pathname: queryParams.get('next') ?? '/tasks',
-                                                search: authParams ? new URLSearchParams(authParams).toString() : '',
-                                            }}
-                                        />
-                                    </Switch>
-                                    <ExportDatasetModal />
-                                    <ExportBackupModal />
-                                    <ImportDatasetModal />
-                                    <ImportBackupModal />
-                                    <InvitationWatcher />
-                                    <UploadFileStatusModal />
-                                    <SelectCSUpdatingSchemeModal />
-                                    <SelectOrganizationModal />
-                                    <BulkProgress />
-                                    {this.state.githubStarPromptVisible &&
-                                        growth.data ? (
-                                            <GitHubStarModal
-                                                open
-                                                onShown={this.markGitHubStarPromptShown}
-                                                onSupport={this.supportCVAT}
-                                                onClose={() => this.setState({ githubStarPromptVisible: false })}
-                                            />
-                                        ) : null}
-                                    {/* eslint-disable-next-line */}
-                                    <a id='downloadAnchor' target='_blank' style={{ display: 'none' }} download />
-                                </Layout.Content>
-                            </Layout>
-                        </ShortcutsContextProvider>
-                    </GlobalErrorBoundary>
+                    <AuthenticatedShell
+                        user={user}
+                        pluginRoutes={routesToRender}
+                        nextPath={queryParams.get('next') ?? '/tasks'}
+                        nextSearch={authParams ? new URLSearchParams(authParams).toString() : ''}
+                    >
+                        <ExportDatasetModal />
+                        <ExportBackupModal />
+                        <ImportDatasetModal />
+                        <ImportBackupModal />
+                        <InvitationWatcher />
+                        <UploadFileStatusModal />
+                        <SelectCSUpdatingSchemeModal />
+                        <SelectOrganizationModal />
+                        <BulkProgress />
+                        {this.state.githubStarPromptVisible &&
+                            growth.data ? (
+                                <GitHubStarModal
+                                    open
+                                    onShown={this.markGitHubStarPromptShown}
+                                    onSupport={this.supportCVAT}
+                                    onClose={() => this.setState({ githubStarPromptVisible: false })}
+                                />
+                            ) : null}
+                    </AuthenticatedShell>
                 );
             }
 
             return (
-                <GlobalErrorBoundary>
-                    <>
-                        <Switch>
-                            {isRegistrationEnabled && (
-                                <Route exact path='/auth/register' component={RegisterPageContainer} />
-                            )}
-                            <Route exact path='/auth/email-verification-sent' component={EmailVerificationSentPage} />
-                            <Route exact path='/auth/incorrect-email-confirmation' component={IncorrectEmailConfirmationPage} />
-                            <Route exact path='/auth/login' component={LoginPageContainer} />
-                            {isPasswordResetEnabled && (
-                                <Route exact path='/auth/password/reset' component={ResetPasswordPageComponent} />
-                            )}
-                            {isPasswordResetEnabled && (
-                                <Route
-                                    exact
-                                    path='/auth/password/reset/confirm'
-                                    component={ResetPasswordPageConfirmComponent}
-                                />
-                            )}
-
-                            <Route exact path='/auth/email-confirmation' component={EmailConfirmationPage} />
-                            { routesToRender }
-                            <Redirect
-                                to={location.pathname.length > 1 ? `/auth/login?next=${location.pathname}` : '/auth/login'}
-                            />
-                        </Switch>
-                        <InvitationWatcher />
-                    </>
-                </GlobalErrorBoundary>
+                <UnauthenticatedShell
+                    isRegistrationEnabled={isRegistrationEnabled}
+                    isPasswordResetEnabled={isPasswordResetEnabled}
+                    pluginRoutes={routesToRender}
+                    pathname={location.pathname}
+                />
             );
         }
 

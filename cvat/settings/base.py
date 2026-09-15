@@ -148,6 +148,7 @@ INSTALLED_APPS = [
     "cvat.apps.consensus",
     "cvat.apps.access_tokens",
     "cvat.apps.growth",
+    "cvat.apps.workforce",
 ]
 
 AUTH_USER_MODEL = "iam.User"
@@ -183,7 +184,7 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
-        "cvat.apps.access_tokens.permissions.PolicyEnforcer",
+        "cvat.apps.workforce.permissions.WorkforcePolicyEnforcer",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
@@ -284,6 +285,9 @@ TEMPLATES = [
 IAM_TYPE = "BASIC"
 IAM_BASE_EXCEPTION = None  # a class which will be used by IAM to report errors
 IAM_DEFAULT_ROLE = "user"
+# Accounts are provisioned by administrators only. The public registration endpoint
+# is not routed when this is false.
+IAM_PUBLIC_REGISTRATION = False
 
 IAM_ADMIN_ROLE = "admin"
 # Index in the list below corresponds to the priority (0 has highest priority)
@@ -301,6 +305,9 @@ OBJECTS_NOT_RELATED_WITH_ORG = [
     "request",
     "access_token",
     "growth",
+    "workforce_account",
+    "workforce_audit",
+    "workforce_policy",
 ]
 
 # ORG settings

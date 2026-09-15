@@ -27,6 +27,8 @@ import { usePrevious } from 'utils/hooks';
 import EventRecorder from 'utils/event-recorder';
 import { readLatestFrame } from 'utils/remember-latest-frame';
 import { EventScope } from 'cvat-core/src/enums';
+import ProtectedWorkspace from 'components/data-protection/protected-workspace';
+import usePlatformPolicy from 'components/data-protection/use-platform-policy';
 import SearchFramesModal from './top-bar/search-modal';
 
 interface Props {
@@ -48,6 +50,7 @@ export default function AnnotationPageComponent(props: Props): JSX.Element {
     } = props;
     const prevJob = usePrevious(job);
     const prevFetching = usePrevious(fetching);
+    const platformPolicy = usePlatformPolicy();
 
     useEffect(() => {
         saveLogs();
@@ -145,7 +148,12 @@ export default function AnnotationPageComponent(props: Props): JSX.Element {
     }
 
     if (workspace === Workspace.AUDIO) {
-        return <AudioAnnotationPage />;
+        return (
+            <>
+                <AudioAnnotationPage />
+                <ProtectedWorkspace watermarkEnabled={platformPolicy.watermark_enabled} />
+            </>
+        );
     }
 
     return (
@@ -164,6 +172,7 @@ export default function AnnotationPageComponent(props: Props): JSX.Element {
             <FiltersModalComponent />
             <StatisticsModalComponent />
             <SearchFramesModal />
+            <ProtectedWorkspace watermarkEnabled={platformPolicy.watermark_enabled} />
         </Layout>
     );
 }
