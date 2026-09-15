@@ -2091,7 +2091,7 @@ def _create_static_chunks(
         def update_progress(self, progress: float):
             progress_animation = "|/-\\"
 
-            status_message = "CVAT is preparing data chunks"
+            status_message = "Preparing data chunks"
             if not progress:
                 status_message = "{} {}".format(
                     status_message, progress_animation[self._call_counter]

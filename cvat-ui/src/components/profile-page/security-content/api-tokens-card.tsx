@@ -241,7 +241,7 @@ function ApiTokensCard(): JSX.Element {
                                                     can be used for authentication instead of a username/email
                                                     and password. They allow interaction with the CVAT server
                                                     API via various clients, including custom scripts, the CVAT
-                                                    Python SDK, and the CVAT CLI.
+                                                    Python SDK, and the CLI.
                                                 </Text>
                                             </Col>
                                         </Row>

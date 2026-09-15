@@ -77,7 +77,7 @@ export interface WatermarkContent {
 
 export function buildWatermarkTile(content: WatermarkContent): string {
     const line1 = `${content.username}${content.userId ? ` #${content.userId}` : ''}`;
-    const line2 = `${content.timestamp} CONFIDENTIAL`;
+    const line2 = `${content.timestamp} MENADEVS CONFIDENTIAL`;
     const escape = (text: string): string => text
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="220">

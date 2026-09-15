@@ -689,16 +689,15 @@ SENDFILE_ROOT = BASE_DIR
 CVAT_DOCS_URL = "https://docs.cvat.ai/docs/"
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "CVAT REST API",
-    "DESCRIPTION": "REST API for Computer Vision Annotation Tool (CVAT)",
+    "TITLE": "MenaVision Annotator REST API",
+    "DESCRIPTION": "REST API of the MENA Devs internal annotation platform",
     # Statically set schema version. May also be an empty string. When used together with
     # view versioning, will become '0.0.0 (v2)' for 'v2' versioned requests.
     # Set VERSION to None if only the request version should be rendered.
     "VERSION": __version__,
     "CONTACT": {
-        "name": "CVAT.ai team",
-        "url": "https://github.com/cvat-ai/cvat",
-        "email": "support@cvat.ai",
+        "name": "MENA Devs",
+        "url": "https://github.com/khaled-mena/MenaVision_Anotator",
     },
     "LICENSE": {
         "name": "MIT License",
@@ -853,8 +852,12 @@ TMP_FILE_OR_DIR_RETENTION_DAYS = 3
 
 LOGO_FILENAME = "logo.svg"
 ABOUT_INFO = {
-    "subtitle": "Open Data Annotation Platform",
+    "subtitle": "MENA Devs internal annotation platform",
 }
+
+# The upstream prompt asking users to star the project on GitHub is not shown on the
+# internal platform.
+GITHUB_STAR_PROMPT_POLICY = "cvat.apps.growth.policies.DisabledGitHubStarPromptPolicy"
 
 if ONE_RUNNING_JOB_IN_QUEUE_PER_USER:
     PERIODIC_RQ_JOBS.append(

@@ -213,15 +213,11 @@ class ServerViewSet(viewsets.ViewSet):
         from cvat import __version__ as cvat_version
 
         about = {
-            "name": "Computer Vision Annotation Tool",
+            "name": "MenaVision Annotator",
             "subtitle": settings.ABOUT_INFO["subtitle"],
-            "description": "CVAT is completely re-designed and re-implemented "
-            + "version of Video Annotation Tool from Irvine, California "
-            + "tool. It is free, online, interactive video and image annotation "
-            + "tool for computer vision. It is being used by our team to "
-            + "annotate million of objects with different properties. Many UI "
-            + "and UX decisions are based on feedbacks from professional data "
-            + "annotation team.",
+            "description": "MenaVision Annotator is the internal MENA Devs platform for "
+            + "image and video annotation. Administrators manage projects, tasks and "
+            + "assignments; Taskers and Reviewers work only on the jobs assigned to them.",
             "version": cvat_version,
             "logo_url": request.build_absolute_uri(
                 storages["staticfiles"].url(settings.LOGO_FILENAME)
