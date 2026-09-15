@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import { SerializedUser } from './server-response-types';
+import { SerializedUser, WorkforceRoleValue } from './server-response-types';
 import { UserModifiableFields } from './server-request-types';
 import PluginRegistry from './plugins';
 import { fieldsToSnakeCase } from './common';
@@ -23,6 +23,7 @@ export default class User {
     public readonly isActive: boolean;
     public readonly isVerified: boolean;
     public readonly hasAnalyticsAccess: boolean;
+    public readonly role: WorkforceRoleValue;
 
     constructor(initialData: SerializedUser) {
         const data = {
@@ -39,6 +40,7 @@ export default class User {
             is_active: null,
             email_verification_required: null,
             has_analytics_access: null,
+            workforce_role: null,
         };
 
         for (const property in data) {
@@ -89,6 +91,9 @@ export default class User {
                 hasAnalyticsAccess: {
                     get: () => data.has_analytics_access,
                 },
+                role: {
+                    get: () => data.workforce_role,
+                },
             }),
         );
     }
@@ -108,6 +113,7 @@ export default class User {
             is_active: this.isActive,
             email_verification_required: this.isVerified,
             has_analytics_access: this.hasAnalyticsAccess,
+            workforce_role: this.role,
         };
     }
 

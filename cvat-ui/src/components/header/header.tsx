@@ -6,7 +6,7 @@
 import './styles.scss';
 import React, { useCallback, useEffect } from 'react';
 import { connect } from 'react-redux';
-import { useHistory, useLocation } from 'react-router';
+import { useHistory } from 'react-router';
 import { Row, Col } from 'antd/lib/grid';
 import { MenuProps } from 'antd/lib/menu';
 import {
@@ -34,6 +34,7 @@ import config from 'config';
 import { Organization } from 'cvat-core-wrapper';
 import CVATTooltip from 'components/common/cvat-tooltip';
 import CVATLogo from 'components/common/cvat-logo';
+import { getRole, isAdmin } from 'utils/access-control/roles';
 import { switchSettingsModalVisible as switchSettingsModalVisibleAction } from 'actions/settings-actions';
 import { logoutAsync } from 'actions/auth-actions';
 import { shortcutsActions, registerComponentShortcuts } from 'actions/shortcuts-actions';
@@ -44,6 +45,7 @@ import GlobalHotKeys, { KeyMap } from 'utils/mousetrap-react';
 import { ShortcutScope } from 'utils/enums';
 import { subKeyMap } from 'utils/component-subkeymap';
 import SettingsModal from './settings-modal/settings-modal';
+import NavigationLinks from './navigation-links';
 
 interface StateToProps {
     user: any;
@@ -175,7 +177,7 @@ function HeaderComponent(props: Props): JSX.Element {
     } = props;
 
     const {
-        CHANGELOG_URL, LICENSE_URL, GITHUB_URL, GUIDE_URL, DISCORD_URL,
+        CHANGELOG_URL, LICENSE_URL, GITHUB_URL, GUIDE_URL,
     } = config;
 
     const isMounted = useIsMounted();
@@ -187,7 +189,6 @@ function HeaderComponent(props: Props): JSX.Element {
     }, []);
 
     const history = useHistory();
-    const location = useLocation();
 
     const handlers: Record<keyof typeof componentShortcuts, (event?: KeyboardEvent) => void> = {
         SWITCH_SHORTCUTS: (event: KeyboardEvent | undefined) => {
@@ -220,14 +221,6 @@ function HeaderComponent(props: Props): JSX.Element {
             </a>
         </Col>
     ), 10]);
-    aboutLinks.push([(
-        <Col key='discord'>
-            <a href={DISCORD_URL} target='_blank' rel='noopener noreferrer'>
-                Find us on Discord
-            </a>
-        </Col>
-    ), 20]);
-
     aboutLinks.push(...aboutPlugins.map(({ component: Component, weight }, index: number) => (
         [<Component key={index} targetProps={props} />, weight] as [JSX.Element, number]
     )));
@@ -290,8 +283,9 @@ function HeaderComponent(props: Props): JSX.Element {
 
     const plugins = usePlugins((state: CombinedState) => state.plugins.components.header.userMenu.items, props);
 
+    const role = getRole(user);
     const menuItems: [NonNullable<MenuProps['items']>[0], number][] = [];
-    if (user.isStaff) {
+    if (user.isStaff && isAdmin(role)) {
         menuItems.push([{
             key: 'admin_page',
             icon: <ControlOutlined />,
@@ -313,7 +307,7 @@ function HeaderComponent(props: Props): JSX.Element {
 
     const viewType: 'menu' | 'list' = (organizationsList?.length || 0) > 5 ? 'list' : 'menu';
 
-    menuItems.push([{
+    const organizationMenuItem: typeof menuItems[0] = [{
         key: 'organization',
         icon: organizationFetching || organizationsListFetching ? <LoadingOutlined /> : <TeamOutlined />,
         label: 'Organization',
@@ -359,7 +353,10 @@ function HeaderComponent(props: Props): JSX.Element {
                 label: organization.slug,
             }))] : []),
         ],
-    }, 20]);
+    }, 20];
+    if (isAdmin(role)) {
+        menuItems.push(organizationMenuItem);
+    }
 
     menuItems.push([{
         key: 'settings',
@@ -391,104 +388,12 @@ function HeaderComponent(props: Props): JSX.Element {
         ]),
     );
 
-    const getButtonClassName = (value: string, highlightable = true): string => {
-        // eslint-disable-next-line security/detect-non-literal-regexp
-        const regex = new RegExp(`${value}$`);
-        const baseClass = `cvat-header-${value}-button cvat-header-button`;
-        return highlightable && location.pathname.match(regex) ?
-            `${baseClass} cvat-active-header-button` : baseClass;
-    };
-
     return (
         <Layout.Header className='cvat-header'>
             <GlobalHotKeys keyMap={subKeyMap(componentShortcuts, keyMap)} handlers={handlers} />
             <div className='cvat-left-header'>
                 <CVATLogo />
-                <Button
-                    className={getButtonClassName('projects')}
-                    type='link'
-                    value='projects'
-                    href='/projects?page=1'
-                    onClick={(event: React.MouseEvent): void => {
-                        event.preventDefault();
-                        history.push('/projects');
-                    }}
-                >
-                    Projects
-                </Button>
-                <Button
-                    className={getButtonClassName('tasks')}
-                    type='link'
-                    value='tasks'
-                    href='/tasks?page=1'
-                    onClick={(event: React.MouseEvent): void => {
-                        event.preventDefault();
-                        history.push('/tasks');
-                    }}
-                >
-                    Tasks
-                </Button>
-                <Button
-                    className={getButtonClassName('jobs')}
-                    type='link'
-                    value='jobs'
-                    href='/jobs?page=1'
-                    onClick={(event: React.MouseEvent): void => {
-                        event.preventDefault();
-                        history.push('/jobs');
-                    }}
-                >
-                    Jobs
-                </Button>
-                <Button
-                    className={getButtonClassName('cloudstorages')}
-                    type='link'
-                    value='cloudstorages'
-                    href='/cloudstorages?page=1'
-                    onClick={(event: React.MouseEvent): void => {
-                        event.preventDefault();
-                        history.push('/cloudstorages');
-                    }}
-                >
-                    Cloud Storages
-                </Button>
-                <Button
-                    className={getButtonClassName('requests')}
-                    type='link'
-                    value='requests'
-                    href='/requests?page=1'
-                    onClick={(event: React.MouseEvent): void => {
-                        event.preventDefault();
-                        history.push('/requests');
-                    }}
-                >
-                    Requests
-                </Button>
-                <Button
-                    className={getButtonClassName('models')}
-                    type='link'
-                    value='models'
-                    href='/models'
-                    onClick={(event: React.MouseEvent): void => {
-                        event.preventDefault();
-                        history.push('/models');
-                    }}
-                >
-                    Models
-                </Button>
-                {isAnalyticsPluginActive && user.hasAnalyticsAccess ? (
-                    <Button
-                        className={getButtonClassName('analytics', false)}
-                        type='link'
-                        href='/analytics'
-                        onClick={(event: React.MouseEvent): void => {
-                            event.preventDefault();
-                            window.open('/analytics', '_blank');
-                        }}
-                    >
-                        Analytics
-                    </Button>
-                ) : null}
+                <NavigationLinks role={role} analyticsAvailable={isAnalyticsPluginActive && user.hasAnalyticsAccess} />
             </div>
             <div className='cvat-right-header'>
                 <CVATTooltip overlay='Click to open repository'>

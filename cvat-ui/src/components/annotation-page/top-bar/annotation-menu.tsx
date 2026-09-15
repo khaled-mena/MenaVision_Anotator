@@ -19,6 +19,8 @@ import { usePlugins } from 'utils/hooks';
 
 import { openAnnotationsActionModal } from 'components/annotation-page/annotations-actions/annotations-actions-modal';
 import { CombinedState } from 'reducers';
+import { getRole } from 'utils/access-control/roles';
+import { isAnnotationMenuItemVisible } from 'utils/access-control/annotation-menu-policy';
 import {
     finishCurrentJobAsync,
     removeAnnotationsAsync as removeAnnotationsAsyncAction,
@@ -48,6 +50,7 @@ function AnnotationMenuComponent(props: Props): JSX.Element {
     const dispatch = useDispatch();
     const history = useHistory();
     const jobInstance = useSelector((state: CombinedState) => state.annotation.job.instance as Job);
+    const role = getRole(useSelector((state: CombinedState) => state.auth.user));
     const [jobState, setJobState] = useState(jobInstance.state);
     const [removeAnnotationsConfirmOpen, setRemoveAnnotationsConfirmOpen] = useState(false);
     const pluginActions = usePlugins(
@@ -189,7 +192,9 @@ function AnnotationMenuComponent(props: Props): JSX.Element {
     );
 
     const sortedMenuItems = [...menuItems].sort((menuItem1, menuItem2) => menuItem1[1] - menuItem2[1]);
-    const finalMenuItems = sortedMenuItems.map((menuItem) => menuItem[0]);
+    const finalMenuItems = sortedMenuItems
+        .map((menuItem) => menuItem[0])
+        .filter((menuItem) => isAnnotationMenuItemVisible(role, menuItem?.key));
 
     return (
         <>

@@ -1,0 +1,91 @@
+// Copyright (C) CVAT.ai Corporation
+//
+// SPDX-License-Identifier: MIT
+
+@import 'base';
+
+.cvat-administration-page {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .cvat-administration-page-title {
+        margin-top: $grid-unit-size * 2;
+    }
+
+    .cvat-administration-page-wrapper {
+        flex-grow: 1;
+        overflow-y: auto;
+        align-items: start;
+    }
+
+    .cvat-administration-navigation-menu {
+        position: sticky;
+        top: 0;
+        border-radius: $grid-unit-size;
+    }
+
+    .cvat-administration-page-content {
+        padding-left: $grid-unit-size * 3;
+        padding-bottom: $grid-unit-size * 2;
+    }
+
+    .cvat-administration-section-header {
+        margin-bottom: $grid-unit-size * 2;
+
+        h4 {
+            margin-bottom: $grid-unit-size * 0.5;
+        }
+    }
+
+    .cvat-administration-accounts-toolbar {
+        margin-bottom: $grid-unit-size * 2;
+
+        .cvat-administration-role-filter,
+        .cvat-administration-status-filter {
+            width: $grid-unit-size * 16;
+        }
+    }
+
+    .cvat-administration-accounts-error {
+        margin-bottom: $grid-unit-size * 2;
+    }
+
+    .cvat-administration-account-name {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .cvat-administration-account-suspended {
+        color: $text-color-secondary;
+    }
+
+    .cvat-administration-audit-search {
+        width: $grid-unit-size * 32;
+    }
+
+    .cvat-administration-security-card {
+        margin-bottom: $grid-unit-size * 2;
+
+        .cvat-administration-security-hint {
+            max-width: $grid-unit-size * 70;
+            margin-bottom: 0;
+        }
+    }
+
+    .cvat-administration-security-limits-list {
+        margin: 0;
+        padding-left: $grid-unit-size * 2;
+    }
+}
+
+.cvat-administration-dialog-note {
+    display: block;
+    margin-top: $grid-unit-size;
+}
+
+.cvat-administration-generated-password {
+    margin-top: $grid-unit-size * 2;
+}

@@ -5,10 +5,10 @@
 
 const NO_BREAK_SPACE = '\u00a0';
 const UNDEFINED_ATTRIBUTE_VALUE = '__undefined__';
-const CHANGELOG_URL = 'https://github.com/cvat-ai/cvat/blob/develop/CHANGELOG.md';
-const LICENSE_URL = 'https://github.com/cvat-ai/cvat/blob/develop/LICENSE';
+const CHANGELOG_URL = 'https://github.com/khaled-mena/MenaVision_Anotator/blob/develop/CHANGELOG.md';
+const LICENSE_URL = 'https://github.com/khaled-mena/MenaVision_Anotator/blob/develop/LICENSE';
 const DISCORD_URL = 'https://discord.gg/fNR3eXfk6C';
-const GITHUB_URL = 'https://github.com/cvat-ai/cvat';
+const GITHUB_URL = 'https://github.com/khaled-mena/MenaVision_Anotator';
 const GITHUB_IMAGE_URL = 'https://github.com/cvat-ai/cvat/raw/develop/site/content/en/images/cvat.jpg';
 const GUIDE_URL = 'https://docs.cvat.ai/docs';
 const QUALITY_TARGET_METRICS_GUIDE_URL =
@@ -128,7 +128,7 @@ const PAID_PLACEHOLDER_CONFIG = {
     features: {
         qualityControl:
         'The Quality Control feature enables effortless evaluation of annotation quality by creating' +
-        ' a Ground Truth job that works as benchmark. CVAT automatically compares all task-related jobs' +
+        ' a Ground Truth job that works as benchmark. The platform automatically compares all task-related jobs' +
         ' to this benchmark, calculating annotation precision to ensure high-quality results.',
         analyticsReport:
         'The Analytics Report feature provides comprehensive insights into your resource, including key metrics like' +

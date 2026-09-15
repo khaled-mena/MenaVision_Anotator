@@ -67,6 +67,7 @@ from cvat.apps.iam.models import User
 from cvat.apps.iam.permissions import get_iam_context
 from cvat.apps.organizations.models import Organization
 from cvat.apps.webhooks.models import Webhook
+from cvat.apps.workforce.context import resolve_role
 from cvat.utils import django_database as db_utils
 from cvat.utils.paths import problem_with_untrusted_path
 from utils.dataset_manifest import ImageManifestManager
@@ -341,6 +342,7 @@ class UserSerializer(serializers.ModelSerializer):
         required=False,
         read_only=True,
     )
+    workforce_role = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -359,15 +361,20 @@ class UserSerializer(serializers.ModelSerializer):
             "date_joined",
             "has_analytics_access",
             "created_via",
+            "workforce_role",
         )
         read_only_fields = (
             "last_login",
             "date_joined",
             "has_analytics_access",
             "created_via",
+            "workforce_role",
         )
         write_only_fields = ("password",)
         extra_kwargs = {"last_login": {"allow_null": True}}
+
+    def get_workforce_role(self, user: User) -> str:
+        return resolve_role(user).value
 
 
 class DelimitedStringListField(serializers.ListField):

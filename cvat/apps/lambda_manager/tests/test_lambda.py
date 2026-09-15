@@ -185,6 +185,14 @@ class _LambdaTestCaseBase(ApiTestBase):
             username="job-assignee", password="job-assignee", email="job-assignee@example.com"
         )
 
+        # The internal platform reserves task ownership for administrators (see
+        # _assign_workforce_roles in cvat.apps.engine.tests.test_rest_api).
+        from cvat.apps.workforce.role_sync import RoleSync
+        from cvat.apps.workforce.roles import WorkforceRole
+
+        for account in (cls.admin, cls.owner):
+            RoleSync.apply(account, WorkforceRole.ADMIN)
+
     def _create_task(self, task_spec, data, *, owner, org_id=None):
         with ForceLogin(owner or self.admin, self.client):
             response = self.client.post(
@@ -394,9 +402,9 @@ class LambdaTestCases(_LambdaTestCaseBase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual({item["id"] for item in response.data}, set(request_ids.values()))
 
+        # Offline auto annotation is administrative on the internal platform.
         response = self._get_request(LAMBDA_REQUESTS_PATH, self.user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual({item["id"] for item in response.data}, {request_ids["assigned"]})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         response = self._get_request(LAMBDA_REQUESTS_PATH, None)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -407,8 +415,7 @@ class LambdaTestCases(_LambdaTestCaseBase):
         self.assertEqual(len(response.data), 0)
 
         response = self._get_request(LAMBDA_REQUESTS_PATH, self.user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         response = self._get_request(LAMBDA_REQUESTS_PATH, None)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -446,7 +453,7 @@ class LambdaTestCases(_LambdaTestCaseBase):
 
         for user, expected_status in (
             (self.admin, status.HTTP_200_OK),
-            (self.user, status.HTTP_200_OK),
+            (self.user, status.HTTP_403_FORBIDDEN),
             (self.job_assignee, status.HTTP_403_FORBIDDEN),
             (None, status.HTTP_401_UNAUTHORIZED),
         ):
@@ -468,8 +475,8 @@ class LambdaTestCases(_LambdaTestCaseBase):
 
         for user, expected_status in (
             (self.admin, status.HTTP_200_OK),
-            (self.user, status.HTTP_200_OK),
-            (self.job_assignee, status.HTTP_200_OK),
+            (self.user, status.HTTP_403_FORBIDDEN),
+            (self.job_assignee, status.HTTP_403_FORBIDDEN),
             (None, status.HTTP_401_UNAUTHORIZED),
         ):
             with self.subTest(user=user):
@@ -497,15 +504,16 @@ class LambdaTestCases(_LambdaTestCaseBase):
                 "car": {"name": "car"},
             },
         }
-        response = self._post_request(LAMBDA_REQUESTS_PATH, self.user, data=data)
+        # Offline auto annotation is administrative on the internal platform.
+        response = self._post_request(LAMBDA_REQUESTS_PATH, self.admin, data=data)
         id_request = response.data["id"]
 
         for user, expected_status in (
             (None, status.HTTP_401_UNAUTHORIZED),
-            (self.owner, status.HTTP_403_FORBIDDEN),
             (self.job_assignee, status.HTTP_403_FORBIDDEN),
-            (self.user, status.HTTP_204_NO_CONTENT),
-            (self.user, status.HTTP_404_NOT_FOUND),
+            (self.user, status.HTTP_403_FORBIDDEN),
+            (self.owner, status.HTTP_204_NO_CONTENT),
+            (self.owner, status.HTTP_404_NOT_FOUND),
         ):
             with self.subTest(user=user):
                 response = self._delete_request(f"{LAMBDA_REQUESTS_PATH}/{id_request}", user)
@@ -513,17 +521,17 @@ class LambdaTestCases(_LambdaTestCaseBase):
 
         response = self._post_request(
             LAMBDA_REQUESTS_PATH,
-            self.job_assignee,
+            self.admin,
             data={**data, "job": self.assigned_to_user_job_id},
         )
         id_request = response.data["id"]
 
         for user, expected_status in (
             (None, status.HTTP_401_UNAUTHORIZED),
-            (self.owner, status.HTTP_403_FORBIDDEN),
             (self.user, status.HTTP_403_FORBIDDEN),
-            (self.job_assignee, status.HTTP_204_NO_CONTENT),
-            (self.job_assignee, status.HTTP_404_NOT_FOUND),
+            (self.job_assignee, status.HTTP_403_FORBIDDEN),
+            (self.admin, status.HTTP_204_NO_CONTENT),
+            (self.admin, status.HTTP_404_NOT_FOUND),
         ):
             with self.subTest(user=user):
                 response = self._delete_request(f"{LAMBDA_REQUESTS_PATH}/{id_request}", user)
@@ -570,14 +578,11 @@ class LambdaTestCases(_LambdaTestCaseBase):
 
             self._delete_lambda_request(response.data["id"])
 
+            # Offline auto annotation is administrative on the internal platform.
             response = self._post_request(
                 LAMBDA_REQUESTS_PATH, self.user, data=data_assigned_to_user_task
             )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            for key in expected_keys_in_response_requests:
-                self.assertIn(key, response.data)
-
-            self._delete_lambda_request(response.data["id"], self.user)
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
             response = self._post_request(LAMBDA_REQUESTS_PATH, self.user, data=data_main_task)
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1470,6 +1475,17 @@ class LambdaTestCases(_LambdaTestCaseBase):
 
 
 class TestComplexFrameSetupCases(_LambdaTestCaseBase):
+    @classmethod
+    def _create_db_users(cls):
+        super()._create_db_users()
+
+        from cvat.apps.workforce.role_sync import RoleSync
+        from cvat.apps.workforce.roles import WorkforceRole
+
+        # Tasks in these cases are created and owned by self.user, an administrator on
+        # the internal platform.
+        RoleSync.apply(cls.user, WorkforceRole.ADMIN)
+
     def _invoke_function(self, func, payload):
         data = []
         func_id = func.id
