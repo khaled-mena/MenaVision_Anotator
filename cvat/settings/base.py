@@ -774,6 +774,22 @@ ACCOUNT_ADAPTER = "cvat.apps.iam.adapters.DefaultAccountAdapterEx"
 CVAT_HOST = os.getenv("CVAT_HOST", "localhost")
 CVAT_BASE_URL = os.getenv("CVAT_BASE_URL", f"http://{CVAT_HOST}:8080").rstrip("/")
 
+
+def _split_origins(value: str) -> list[str]:
+    return [origin.strip().rstrip("/") for origin in value.split(",") if origin.strip()]
+
+
+# Origins the browser client is served from. Django rejects every unsafe request whose
+# Origin header does not match the request host and scheme, so a deployment behind a
+# public domain (or a proxy that terminates TLS before Traefik) has to list its public
+# URL here, e.g. CSRF_TRUSTED_ORIGINS=https://annotate.example.com. CVAT_BASE_URL is
+# trusted automatically when it points to a public host.
+_PUBLIC_ORIGINS = _split_origins(os.getenv("CSRF_TRUSTED_ORIGINS", ""))
+if urllib.parse.urlsplit(CVAT_BASE_URL).hostname not in ("localhost", "127.0.0.1"):
+    _PUBLIC_ORIGINS.append(CVAT_BASE_URL)
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(_PUBLIC_ORIGINS))
+CORS_ALLOWED_ORIGINS = list(CSRF_TRUSTED_ORIGINS)
+
 CLICKHOUSE = {
     "events": {
         "NAME": os.getenv("CLICKHOUSE_DB", "cvat"),
