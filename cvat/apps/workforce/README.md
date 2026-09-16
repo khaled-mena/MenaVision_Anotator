@@ -70,3 +70,22 @@ Admin automatically beyond accounts that already were superusers.
   print, watermark. They improve usability and traceability; they are not the security boundary.
 - Outside the platform: operating system screenshots, screen recording, capture devices. Those
   need managed endpoints, virtual desktops or DLP tooling.
+
+## Deployment behind a public domain
+
+Django rejects state changing requests whose `Origin` does not match a trusted origin
+("CSRF Failed: Origin checking failed"). Set the public URL in the compose environment:
+
+```
+CVAT_HOST=annotate.example.com
+CVAT_BASE_URL=https://annotate.example.com
+CSRF_TRUSTED_ORIGINS=https://annotate.example.com   # optional, comma separated extra origins
+```
+
+`CVAT_BASE_URL` is trusted automatically when it is not localhost; `CSRF_TRUSTED_ORIGINS`
+adds further origins (a second domain, a plain http staging URL). Both feed
+`CSRF_TRUSTED_ORIGINS` and `CORS_ALLOWED_ORIGINS`, so the UI served from that domain can
+call the API. If TLS terminates in front of Traefik, that proxy must forward
+`X-Forwarded-Proto: https` and Traefik must trust it
+(`TRAEFIK_ENTRYPOINTS_web_FORWARDEDHEADERS_TRUSTEDIPS`), otherwise secure cookies and
+redirects are built for plain http.

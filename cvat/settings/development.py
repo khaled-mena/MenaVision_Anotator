@@ -28,14 +28,14 @@ UI_URL = "{}://{}".format(UI_SCHEME, UI_HOST)
 if UI_PORT and UI_PORT != "80":
     UI_URL += ":{}".format(UI_PORT)
 
-CSRF_TRUSTED_ORIGINS = [UI_URL]
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys([UI_URL, *CSRF_TRUSTED_ORIGINS]))
 
 # set UI url to redirect to after successful e-mail confirmation
 ACCOUNT_EMAIL_CONFIRMATION_ANONYMOUS_REDIRECT_URL = "{}/auth/email-confirmation".format(UI_URL)
 ACCOUNT_EMAIL_VERIFICATION_SENT_REDIRECT_URL = "{}/auth/email-verification-sent".format(UI_URL)
 INCORRECT_EMAIL_CONFIRMATION_URL = "{}/auth/incorrect-email-confirmation".format(UI_URL)
 
-CORS_ORIGIN_WHITELIST = [UI_URL]
+CORS_ORIGIN_WHITELIST = list(dict.fromkeys([UI_URL, *CORS_ALLOWED_ORIGINS]))
 CORS_REPLACE_HTTPS_REFERER = True
 IAM_OPA_URL = "http://localhost:8181"
 IAM_OPA_DATA_URL = f"{IAM_OPA_URL}/v1/data"
