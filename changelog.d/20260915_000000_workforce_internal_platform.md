@@ -12,3 +12,5 @@
 - `CVAT_BASE_URL` and the new `CSRF_TRUSTED_ORIGINS` environment variable feed Django
   `CSRF_TRUSTED_ORIGINS`/`CORS_ALLOWED_ORIGINS`, so deployments on a public domain no longer
   fail with "CSRF Failed: Origin checking failed".
+- `TRAEFIK_FORWARDED_HEADERS_TRUSTED_IPS` lets Traefik honour `X-Forwarded-*` headers from a TLS
+  terminating proxy in front of it, so upload and redirect URLs use https on such deployments.
