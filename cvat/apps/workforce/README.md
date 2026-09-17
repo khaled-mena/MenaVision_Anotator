@@ -86,6 +86,12 @@ CSRF_TRUSTED_ORIGINS=https://annotate.example.com   # optional, comma separated 
 adds further origins (a second domain, a plain http staging URL). Both feed
 `CSRF_TRUSTED_ORIGINS` and `CORS_ALLOWED_ORIGINS`, so the UI served from that domain can
 call the API. If TLS terminates in front of Traefik, that proxy must forward
-`X-Forwarded-Proto: https` and Traefik must trust it
-(`TRAEFIK_ENTRYPOINTS_web_FORWARDEDHEADERS_TRUSTEDIPS`), otherwise secure cookies and
-redirects are built for plain http.
+`X-Forwarded-Proto: https` and Traefik must trust it, otherwise upload URLs (TUS) and
+redirects are built for plain http and the browser blocks them as mixed content:
+
+```
+TRAEFIK_FORWARDED_HEADERS_TRUSTED_IPS=172.24.0.0/16,127.0.0.1/32   # CIDR the proxy connects from
+```
+
+The default (`127.0.0.1/32`) trusts nothing outside the Traefik container. Applying the
+variable only requires recreating the `traefik` service, no image rebuild.

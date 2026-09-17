@@ -291,6 +291,10 @@ services:
 
       TRAEFIK_LOG_FORMAT: json
       TRAEFIK_ENTRYPOINTS_web_ADDRESS: :8080
+      # Addresses whose X-Forwarded-* headers Traefik honours. Set it to the reverse proxy
+      # that terminates TLS in front of Traefik (e.g. the docker bridge subnet nginx uses),
+      # otherwise Django sees plain http behind https and builds http:// upload/redirect URLs.
+      TRAEFIK_ENTRYPOINTS_web_FORWARDEDHEADERS_TRUSTEDIPS: ${TRAEFIK_FORWARDED_HEADERS_TRUSTED_IPS:-127.0.0.1/32}
       TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT: "false"
       TRAEFIK_PROVIDERS_DOCKER_NETWORK: cvat
       TRAEFIK_PROVIDERS_FILE_DIRECTORY: /etc/traefik/rules
